@@ -100,6 +100,74 @@ namespace model {
 			size_t target_idx_; //
 		};
 
+		template <typename Agent>
+		class lock_on_centroid_prey
+		{
+			make_action_from_this(lock_on_centroid_prey);
+
+		public:
+			lock_on_centroid_prey() {}
+			lock_on_centroid_prey(size_t, const json& J)
+			{
+				w_ = J["w"];                       // [1]
+				prey_speed_scale_ = J["prey_speed_scale"]; // [1]
+				target_idx_ = -1;
+				centroid_threshold_ = J["centroid_threshold"];  // Distance threshold to switch to closest prey
+			}
+
+			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+			{
+			}
+
+			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
+			{
+			}
+
+			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+			{
+				if (target_idx_ == -1)
+				{
+
+					// Compute the centroid of the flock the predator is targeting
+					centroid_ = sim.compute_flock_centroid<pigeon_tag>(self->target_f);
+					float dist_to_centroid = glm::distance(self->pos, centroid_);
+
+					if (dist_to_centroid > centroid_threshold_)
+					{
+						auto ofss = torus::ofs(Simulation::WH(), self->pos, centroid_);
+						const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
+						self->steering += Fdir;
+						self->speed = prey_speed_scale_ * 10.0f;  // Adjust speed as needed
+					}
+					else
+					{
+						const auto sv = sim.sorted_view<Tag, pigeon_tag>(idx);
+						if (sv.size())
+						{
+							const auto& target = sim.pop<pigeon_tag>()[sv[0].idx]; // nearest prey
+							target_idx_ = sv[0].idx; // nearest prey
+							self->target_i = static_cast<int>(target_idx_);
+						}
+					}
+
+				}else if(target_idx_ != -1)
+				{
+					const auto& target = sim.pop<pigeon_tag>()[target_idx_];
+					auto ofss = torus::ofs(Simulation::WH(), self->pos, target.pos);
+					const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
+					self->steering += Fdir;
+					self->speed = prey_speed_scale_ * target.speed;
+				}
+			}
+
+		private:
+			float w_ = 0;                       // [1]
+			float prey_speed_scale_ = 0;        // Speed in relation to the prey's speed [1]
+			size_t target_idx_;
+			float centroid_threshold_ = 10.0f;  // The distance threshold to switch to the closest prey
+			glm::vec2 centroid_;                // The centroid of the flock
+		};
+
 
 		template <typename Agent>
 		class avoid_closest_prey

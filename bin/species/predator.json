@@ -22,33 +22,8 @@
       {
         "name": "persistent",
         "tr": 0.05,
-        "duration": 10,
-        "description": "hold pattern",
-
-        "aeroState": {
-          "cruiseSpeed": 10,
-          "w": 5
-        },
-        "actions": [
-          {
-            "name": "wiggle",
-            "w": 1
-          },
-          {
-            "name": "avoid_closest_prey",
-            "w": 5
-          },
-          {
-            "name": "hold_current",
-            "w": 25
-          }
-        ]
-      },
-      {
-        "name": "persistent",
-        "duration": 20,
-        "tr": 0.05,
-        "description": "shadowing",
+        "duration": 30,
+        "description": "chase center prey",
         "aeroState": {
           "cruiseSpeed": 18,
           "w": 5
@@ -59,50 +34,10 @@
             "selection": "biggest"
           },
           {
-            "bearing": 150,
-            "distance": 40,
-            "name": "shadowing",
-            "placement": 1,
-            "prey_speed_scale": 1,
-            "w": 5
-          }
-        ]
-      },
-      {
-        "name": "persistent",
-        "tr": 0.05,
-        "duration": 15,
-        "description": "chase closest prey",
-        "aeroState": {
-          "cruiseSpeed": 18,
-          "w": 5
-        },
-        "actions": [
-          {
-            "name": "wiggle",
-            "w": 0.5
-          },
-          {
-            "name": "chase_closest_prey",
-            "prey_speed_scale": 1.5,
-            "w": 5
-          }
-        ]
-      },
-      {
-        "name": "transient",
-        "tr": 0.05,
-        "description": "set - retreat",
-
-        "aeroState": {
-          "cruiseSpeed": 12,
-          "w": 1
-        },
-        "actions": [
-          {
-            "name": "set_retreat",
-            "distAway": 300,
-            "speed": 10
+            "name": "lock_on_centroid_prey",
+            "prey_speed_scale": 2.5,
+            "centroid_threshold": 5,
+            "w": 25
           }
         ]
       }
@@ -111,10 +46,7 @@
       "name": "piecewise_linear_interpolator",
       "TM": [
         [
-          [ 0, 1, 0, 0 ],
-          [ 0, 0, 1, 0 ],
-          [ 0, 0, 0, 1 ],
-          [ 1, 0, 0, 0 ]
+            [ 1 ]
         ]
       ],
       "edges": [ 0 ]

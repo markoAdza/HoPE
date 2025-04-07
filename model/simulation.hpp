@@ -75,6 +75,27 @@ namespace model {
     }
 
     template <typename Tag>
+    glm::vec2 compute_flock_centroid(size_t flock_id) const
+    {
+        glm::vec2 centroid(0.0f, 0.0f);
+        int count = 0;
+
+        //calculate centroid of flock (flock_id)
+        visit<Tag>([&](const auto& prey) {
+            if (flock_of<Tag>(count) == flock_id) {  // Use count as index
+                centroid += prey.pos;
+                count++;
+            }
+            });
+
+        if (count > 0) {
+            centroid /= static_cast<float>(count);
+        }
+
+        return centroid;
+    }
+
+    template <typename Tag>
     int flock_of(size_t idx) const
     {
       return state_[Tag::value].flock_tracker.id_of(idx);

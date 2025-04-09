@@ -76,10 +76,13 @@ namespace model {
 
     using AP = states::package<
       states::persistent<actions::package<Pred,
-        actions::select_flock<Pred>,
-        actions::lock_on_centroid_prey<Pred>
+      actions::select_flock<Pred>,
+      actions::set_from_flock<Pred>
+      >>,
+      states::persistent<actions::package<Pred,
+      actions::hunt_most_isolated_prey<Pred>
       >>
-      >;
+      > ;
     using transitions = transitions::piecewise_linear_interpolator<AP::transition_matrix, 1>;
 
   public:

@@ -22,8 +22,8 @@
       {
         "name": "persistent",
         "tr": 0.05,
-        "duration": 30,
-        "description": "chase center prey",
+        "duration": 5,
+        "description": "set from flock",
         "aeroState": {
           "cruiseSpeed": 18,
           "w": 5
@@ -34,10 +34,28 @@
             "selection": "biggest"
           },
           {
-            "name": "lock_on_centroid_prey",
+            "name": "set_from_flock",
+            "bearing": 150,
+            "distance": 30,
+            "prey_speed_scale": 2.5
+          }
+        ]
+      },
+      {
+        "name": "persistent",
+        "tr": 0.05,
+        "duration": 15,
+        "description": "hunt",
+        "aeroState": {
+          "cruiseSpeed": 18,
+          "w": 5
+        },
+        "actions": [
+          {
+            "name": "hunt_most_isolated_prey",
             "prey_speed_scale": 2.5,
-            "centroid_threshold": 5,
-            "w": 25
+            "w": 5,
+            "num_neighbors": 5
           }
         ]
       }
@@ -46,7 +64,8 @@
       "name": "piecewise_linear_interpolator",
       "TM": [
         [
-            [ 1 ]
+          [ 0, 1 ],
+          [ 1, 0 ]
         ]
       ],
       "edges": [ 0 ]

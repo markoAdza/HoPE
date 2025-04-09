@@ -52,10 +52,9 @@
         },
         "actions": [
           {
-            "name": "hunt_most_isolated_prey",
+            "name": "hunt_most_peripheral_prey",
             "prey_speed_scale": 2.5,
-            "w": 5,
-            "num_neighbors": 5
+            "w": 5
           }
         ]
       }

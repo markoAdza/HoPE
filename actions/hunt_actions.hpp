@@ -276,6 +276,70 @@ namespace model {
 			size_t num_neighbors_ = 5;  // Number of neighbors to evaluate isolation
 		};
 
+		template <typename Agent>
+		class hunt_most_peripheral_prey
+		{
+			make_action_from_this(hunt_most_peripheral_prey);
+
+		public:
+			hunt_most_peripheral_prey() {}
+
+			hunt_most_peripheral_prey(size_t, const json& J)
+			{
+				w_ = J["w"];
+				prey_speed_scale_ = J["prey_speed_scale"];
+			}
+
+			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+			{
+				const auto& prey_pop = sim.pop<pigeon_tag>();
+				float max_dist_to_centroid = -1.0f;
+				size_t most_peripheral_idx = static_cast<size_t>(-1);
+
+				for (size_t i = 0; i < prey_pop.size(); ++i)
+				{
+					if (!sim.is_alive<pigeon_tag>(i)) continue;
+
+					// ONLY consider prey from the targeted flock
+					if (sim.flock_of<pigeon_tag>(i) != self->target_f) continue;
+
+					glm::vec2 centroid = sim.compute_flock_centroid<pigeon_tag>(self->target_f);
+
+					float dist = glm::length(torus::ofs(Simulation::WH(), prey_pop[i].pos, centroid));
+
+					if (dist > max_dist_to_centroid)
+					{
+						max_dist_to_centroid = dist;
+						most_peripheral_idx = i;
+					}
+				}
+
+				target_idx_ = most_peripheral_idx;
+				self->target_i = static_cast<int>(target_idx_);
+			}
+
+			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
+			{
+			}
+
+			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+			{
+				if (target_idx_ != static_cast<size_t>(-1) && sim.is_alive<pigeon_tag>(target_idx_))
+				{
+					const auto& target = sim.pop<pigeon_tag>()[target_idx_];
+					auto ofss = torus::ofs(Simulation::WH(), self->pos, target.pos);
+					const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
+					self->steering += Fdir;
+					self->speed = prey_speed_scale_ * target.speed;
+				}
+			}
+
+		private:
+			float w_ = 0;
+			float prey_speed_scale_ = 0;
+			size_t target_idx_ = static_cast<size_t>(-1);
+		};
+
 
 	}
 }

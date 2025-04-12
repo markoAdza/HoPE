@@ -6,6 +6,15 @@
 //#include "agents/agents.hpp"
 //#include "agents/pigeon.hpp"
 
+#include <random>
+#include <thread>
+
+inline std::mt19937& thread_local_rng() {
+	thread_local std::mt19937 rng(std::random_device{}());
+	return rng;
+}
+
+
 namespace model {
 	namespace actions {
 
@@ -316,6 +325,66 @@ namespace model {
 
 				target_idx_ = most_peripheral_idx;
 				self->target_i = static_cast<int>(target_idx_);
+			}
+
+			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
+			{
+			}
+
+			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+			{
+				if (target_idx_ != static_cast<size_t>(-1) && sim.is_alive<pigeon_tag>(target_idx_))
+				{
+					const auto& target = sim.pop<pigeon_tag>()[target_idx_];
+					auto ofss = torus::ofs(Simulation::WH(), self->pos, target.pos);
+					const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
+					self->steering += Fdir;
+					self->speed = prey_speed_scale_ * target.speed;
+				}
+			}
+
+		private:
+			float w_ = 0;
+			float prey_speed_scale_ = 0;
+			size_t target_idx_ = static_cast<size_t>(-1);
+		};
+
+		template <typename Agent>
+		class hunt_random_prey
+		{
+			make_action_from_this(hunt_random_prey);
+
+		public:
+			hunt_random_prey() {}
+
+			hunt_random_prey(size_t, const json& J)
+			{
+				w_ = J["w"];
+				prey_speed_scale_ = J["prey_speed_scale"];
+			}
+
+			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+			{
+				const auto& prey_pop = sim.pop<pigeon_tag>();
+				std::vector<size_t> valid_prey_indices;
+
+				for (size_t i = 0; i < prey_pop.size(); ++i)
+				{
+					if (!sim.is_alive<pigeon_tag>(i)) continue;
+
+					// ONLY consider prey from the targeted flock
+					if (sim.flock_of<pigeon_tag>(i) != self->target_f) continue;
+
+					valid_prey_indices.push_back(i);
+				}
+
+				if (!valid_prey_indices.empty())
+				{
+					std::uniform_int_distribution<size_t> dist(0, valid_prey_indices.size() - 1);
+					const size_t rand_idx = valid_prey_indices[dist(thread_local_rng())];
+					target_idx_ = rand_idx;
+					self->target_i = static_cast<int>(target_idx_);
+				}
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)

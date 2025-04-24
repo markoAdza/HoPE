@@ -96,6 +96,65 @@ namespace model {
 		float w_ = 0;       // [1]
 	};
 
+	template <typename Agent>
+	class avoid_p_position_and_direction
+	{
+		make_action_from_this(avoid_p_position_and_direction);
+
+	public:
+		avoid_p_position_and_direction() {}
+		avoid_p_position_and_direction(size_t, const json& J)
+		{
+			float minsep = J["minsep"];   // [m]
+			minsep2 = minsep * minsep;
+			minsep_ = minsep;
+
+			w_pos_ = J["w_pos"];          // position weight
+			w_dir_ = J["w_dir"];          // direction weight
+		}
+
+		void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+		{
+		}
+
+		void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+		{
+			const auto nv = sim.sorted_view<Tag, pred_tag>(idx);
+
+			if (nv.size() && nv[0].dist2 < minsep2)
+			{
+				const auto& predator = sim.pop<pred_tag>()[nv[0].idx];
+
+				if (predator.target_i >= 0 && static_cast<size_t>(predator.target_i) == idx)
+					self->am_target = true;
+				else
+					self->am_target = false;
+
+				// Distance-based scaling
+				const float d = std::sqrt(nv[0].dist2);
+				float scale = 1.0f - (d / minsep_);
+				scale = std::clamp(scale, 0.0f, 1.0f);
+
+				// Position avoidance
+				const auto offset = torus::ofs(Simulation::WH(), predator.pos, self->pos);
+				const auto pos_force = math::save_normalize(offset, vec_t(0.f)) * (w_pos_ * scale);
+
+				// Direction avoidance
+				const float rad_away_pred = math::rad_between(predator.dir, self->dir);
+				const auto dir_force = glmutils::perpDot(self->dir) * std::copysignf(w_dir_ * scale, rad_away_pred);
+
+				self->steering += pos_force + dir_force;
+			}
+		}
+
+	private:
+		float minsep2 = 0;  // [m^2]
+		float minsep_ = 0;  // [m]
+		float w_pos_ = 0;   // [1]
+		float w_dir_ = 0;   // [1]
+	};
+
+
 	//turn in time as reaction to a predator
 	template <typename Agent>
 	class t_turn_pred

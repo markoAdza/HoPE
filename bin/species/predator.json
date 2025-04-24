@@ -21,8 +21,8 @@
     "states": [
       {
         "name": "persistent",
-        "tr": 0.05,
         "duration": 2,
+        "tr": 0.05,
         "description": "set from flock",
         "aeroState": {
           "cruiseSpeed": 18,

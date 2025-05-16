@@ -42,12 +42,12 @@ namespace model {
 
 			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
-				const auto sv = sim.sorted_view<Tag, pigeon_tag>(idx);
+				const auto sv = sim.sorted_view_with_occlusion<Tag, pigeon_tag>(idx, self->pos, self->dir);
 
 				if (sv.size())
-				{ 
-					const auto& target = sim.pop<pigeon_tag>()[sv[0].idx]; // nearest prey
-					auto ofss = torus::ofs(Simulation::WH(), self->pos, target.pos);;
+				{
+					const auto& target = sim.pop<pigeon_tag>()[sv[0].idx];
+					auto ofss = torus::ofs(Simulation::WH(), self->pos, target.pos);
 
 					const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
 					self->steering += Fdir;

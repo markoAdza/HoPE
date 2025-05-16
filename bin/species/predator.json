@@ -52,13 +52,9 @@
         },
         "actions": [
           {
-            "name": "stooping_hunt",
-            "w": 8.0,
-            "prey_speed_scale": 1.1,
-            "stoop_distance_threshold": 40.0,
-            "stoop_speed_factor": 10.0,
-            "steering_factor": 0.5,
-            "num_neighbors": 5
+            "name": "chase_closest_prey",
+            "w": 2.0,
+            "prey_speed_scale": 2.1
           }
         ]
       }

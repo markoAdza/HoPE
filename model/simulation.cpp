@@ -245,7 +245,8 @@ namespace model {
 
 
   Simulation::Simulation(const json& J) :
-    tick_(0)
+    tick_(0),
+    debug_visible_prey()
   {
     WH_ = J["Simulation"]["WH"];
     dt_ = J["Simulation"]["dt"];

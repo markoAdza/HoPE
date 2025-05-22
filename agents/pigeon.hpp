@@ -24,7 +24,7 @@ namespace model {
   template <>
   struct known_color_maps<pigeon_tag> 
   {
-    static constexpr size_t size = 8;
+    static constexpr size_t size = 9;
     static constexpr const char* descr[size] = {
       "none",
 	   "idx",
@@ -33,7 +33,8 @@ namespace model {
       "state",
       "nnd",
 	  "flock",
-      "targeted"
+      "targeted",
+      "occluded"
     };
   };
 

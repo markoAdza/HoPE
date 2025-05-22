@@ -255,6 +255,17 @@ namespace model {
     flock_update_ = 0;
     flock_interval_ = time2tick(J["Simulation"]["flockDetection"]["interval"]);
     init_simulation_state(J, species_, state_, *this);
+
+    const auto& pigeonPop = pop<pigeon_tag>();
+    size_t P = pigeonPop.size();
+    prey_occlusion_radii.resize(P);
+    {
+      std::normal_distribution<float> dist(0.165f, 0.010f);
+      for (size_t i = 0; i < P; ++i) {
+        float r = dist(reng);
+        prey_occlusion_radii[i] = glm::clamp(r, 0.15f, 0.17f);
+      }
+    }
   }
 
 

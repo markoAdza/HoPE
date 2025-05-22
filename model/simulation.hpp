@@ -113,7 +113,6 @@ namespace model {
       static thread_local std::vector<neighbor_info> vis;
       vis.clear();
 
-      float occl_thresh = 0.15f;
       float fov = glm::radians(270.f);
 
       // get the predator only if you really need other fields:
@@ -141,7 +140,8 @@ namespace model {
           float proj = glm::dot(dirAB, AQ);
           if (proj > 0.f && proj < dAB) {
             glm::vec2 closest = dirAB * proj;
-            if (glm::length(AQ - closest) < occl_thresh) {
+            float occl_thresh_j = prey_occlusion_radii[j];
+            if (glm::length(AQ - closest) < occl_thresh_j) {
               blocked = true;
               break;
             }
@@ -297,6 +297,7 @@ namespace model {
 
   private:
     tick_t tick_ = 0;
+    mutable std::vector<float> prey_occlusion_radii;
     mutable std::vector<bool> debug_visible_prey;
     tick_t flock_update_ = 0;
     tick_t flock_interval_ = 0;

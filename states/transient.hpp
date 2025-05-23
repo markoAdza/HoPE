@@ -17,8 +17,20 @@ namespace model {
       explicit transient(size_t idx, const json& J) :
         actions(IP::create(idx, J["actions"]))
 	    {
+        float mean_rt_s = static_cast<float>(J["reaction_time_mean"]);
+        float sd_rt_s = static_cast<float>(J["reaction_time_sd"]);
+
+        std::normal_distribution<float> dist(mean_rt_s, sd_rt_s); //300ms mean with 50ms standard deviation
+        float sampled_rt = dist(model::reng);
+        if (sampled_rt < 0.0001f) 
+          sampled_rt = 0.0001f;
+
+        tr_ = std::max(
+          static_cast<tick_t>(1),
+          static_cast<tick_t>(std::round(sampled_rt / Simulation::dt()))
+        );
+
 	    	sai_ = flight::create_state_aero<float>(J["aeroState"]);
-        tr_ = std::max(tick_t(1), static_cast<tick_t>(double(J["tr"]) / Simulation::dt())); // [tick]
         //normalize_actions<0>();
       }
 

@@ -26,6 +26,8 @@
         "name": "transient",
         "description": "normal flocking",
         "tr": 0.2,
+        "reaction_time_mean": 0.3,
+        "reaction_time_sd": 0.05,
 
         "aeroState": {
           "cruiseSpeed": 14.0,

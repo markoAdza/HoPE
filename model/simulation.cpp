@@ -260,10 +260,10 @@ namespace model {
     size_t P = pigeonPop.size();
     prey_occlusion_radii.resize(P);
     {
-      std::normal_distribution<float> dist(0.165f, 0.010f);
+      std::normal_distribution<float> dist(0.165f, 0.01f);
       for (size_t i = 0; i < P; ++i) {
         float r = dist(reng);
-        prey_occlusion_radii[i] = glm::clamp(r, 0.15f, 0.17f);
+        prey_occlusion_radii[i] = glm::clamp(r, 0.135f, 0.195f);
       }
     }
   }

@@ -266,6 +266,10 @@ namespace model {
         prey_occlusion_radii[i] = glm::clamp(r, 0.135f, 0.195f);
       }
     }
+
+    const size_t N = pop<pigeon_tag>().size();
+    debug_visible_prey.clear();
+    debug_visible_prey.resize(N, false);
   }
 
 

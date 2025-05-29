@@ -122,6 +122,8 @@ namespace model {
     vec_t steering;    // linear, lateral  [kg * m/tick^2]
     int target_f; // flock target
     int target_i; // individual target
+    int previous_target_i = -1;
+    int target_switch_count = 0;
     
     flight::aero_info<float> ai;
 	  flight::state_aero<float> sa;

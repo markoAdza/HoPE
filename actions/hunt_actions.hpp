@@ -34,6 +34,8 @@ namespace model {
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
+				self->previous_target_i = -1;
+			  self->target_switch_count = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -42,7 +44,8 @@ namespace model {
 
 			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
-				const auto sv = sim.sorted_view_with_occlusion<Tag, pigeon_tag>(idx, self->pos, self->dir);
+				glm::vec2 pred_pos_wrapped = torus::wrap(Simulation::WH(), self->pos);
+				const auto sv = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped, self->dir);
 
 				if (sv.size())
 				{
@@ -52,7 +55,14 @@ namespace model {
 					const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
 					self->steering += Fdir;
 					self->speed = prey_speed_scale_ * target.speed;
-					self->target_i = static_cast<int>(sv[0].idx);
+
+					int new_target = static_cast<int>(sv[0].idx);
+					if (self->previous_target_i != -1 && self->previous_target_i != new_target) {
+						++self->target_switch_count;
+					}
+
+					self->previous_target_i = new_target;
+					self->target_i = new_target;
 				}
 			}
 
@@ -79,12 +89,8 @@ namespace model {
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
-				const auto sv = sim.sorted_view<Tag, pigeon_tag>(idx);
-				if (sv.size())
-				{
-					target_idx_ = sv[0].idx; // nearest prey
-					self->target_i = static_cast<int>(target_idx_);
-				}
+				self->previous_target_i = -1;
+				self->target_switch_count = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -93,6 +99,14 @@ namespace model {
 
 			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
+				glm::vec2 pred_pos_wrapped = torus::wrap(Simulation::WH(), self->pos);
+				const auto sv = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped, self->dir);
+				if (sv.size())
+				{
+					target_idx_ = sv[0].idx; // nearest prey
+					self->target_i = static_cast<int>(target_idx_);
+				}
+
 				if (target_idx_ != -1)
 				{
 					const auto& target = sim.pop<pigeon_tag>()[target_idx_]; // nearest prey
@@ -100,6 +114,13 @@ namespace model {
 					const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
 					self->steering += Fdir;
 					self->speed = prey_speed_scale_ * target.speed;
+
+					// confusability
+					int new_target = static_cast<int>(target_idx_);
+					if (self->previous_target_i != -1 && self->previous_target_i != new_target) {
+						++self->target_switch_count;
+					}
+					self->previous_target_i = new_target;
 				}
 			}
 
@@ -126,6 +147,8 @@ namespace model {
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
+				self->previous_target_i = -1;
+				self->target_switch_count = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -150,12 +173,21 @@ namespace model {
 					}
 					else
 					{
-						const auto sv = sim.sorted_view<Tag, pigeon_tag>(idx);
+						glm::vec2 pred_pos_wrapped = torus::wrap(Simulation::WH(), self->pos);
+						const auto sv = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped, self->dir);
 						if (sv.size())
 						{
 							const auto& target = sim.pop<pigeon_tag>()[sv[0].idx]; // nearest prey
 							target_idx_ = sv[0].idx; // nearest prey
-							self->target_i = static_cast<int>(target_idx_);
+
+							//confusability
+							int new_target = static_cast<int>(sv[0].idx);
+							if (self->previous_target_i != -1 && self->previous_target_i != new_target) {
+								++self->target_switch_count;
+							}
+
+							self->previous_target_i = new_target;
+							self->target_i = new_target;
 						}
 					}
 
@@ -234,32 +266,8 @@ namespace model {
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
-				const auto& prey_pop = sim.pop<pigeon_tag>();
-				float max_distance_sum = -1.0f;
-				size_t most_isolated_idx = static_cast<size_t>(-1);
-
-				for (size_t i = 0; i < prey_pop.size(); ++i)
-				{
-					if (!sim.is_alive<pigeon_tag>(i)) continue;
-
-					const auto neighbors = sim.sorted_view<pigeon_tag, pigeon_tag>(i); // prey's own neighbors
-					float distance_sum = 0.0f;
-
-					for (size_t j = 0; j < std::min(num_neighbors_, neighbors.size()); ++j)
-					{
-						const auto& neighbor = prey_pop[neighbors[j].idx];
-						distance_sum += glm::length(torus::ofs(Simulation::WH(), prey_pop[i].pos, neighbor.pos));
-					}
-
-					if (distance_sum > max_distance_sum)
-					{
-						max_distance_sum = distance_sum;
-						most_isolated_idx = i;
-					}
-				}
-
-				target_idx_ = most_isolated_idx;
-				self->target_i = static_cast<int>(target_idx_);
+				self->previous_target_i = -1;
+				self->target_switch_count = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -268,13 +276,62 @@ namespace model {
 
 			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
-				if (target_idx_ != static_cast<size_t>(-1) && sim.is_alive<pigeon_tag>(target_idx_))
+				glm::vec2 pred_pos_wrapped = torus::wrap(Simulation::WH(), self->pos);
+
+				auto vis = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped, self->dir);
+
+				std::vector<size_t> candidates;
+				candidates.reserve(vis.size());
+				for (size_t vi = 0; vi < vis.size(); ++vi) {
+					size_t prey_idx = vis[vi].idx;
+					if (sim.flock_of<pigeon_tag>(prey_idx) == self->target_f) {
+						candidates.push_back(prey_idx);
+					}
+				}
+
+				float best_isolation = -1.0f;
+				size_t most_isolated_idx = static_cast<size_t>(-1);
+
+				const auto& prey_pop = sim.pop<pigeon_tag>();
+				for (size_t prey_idx : candidates) {
+					auto nb = sim.sorted_view<pigeon_tag, pigeon_tag>(prey_idx);
+
+					float distance_sum = 0.0f;
+					for (size_t k = 0; k < std::min(num_neighbors_, nb.size()); ++k) {
+						size_t neighbor_idx = nb[k].idx;
+						if (!sim.is_alive<pigeon_tag>(neighbor_idx)) continue; // skip dead neighbor
+						glm::vec2 diff = torus::ofs(
+							Simulation::WH(),
+							prey_pop[prey_idx].pos,
+							prey_pop[neighbor_idx].pos
+						);
+						distance_sum += glm::length(diff);
+					}
+
+					if (distance_sum > best_isolation) {
+						best_isolation = distance_sum;
+						most_isolated_idx = prey_idx;
+					}
+				}
+
+				target_idx_ = most_isolated_idx;
+
+				if (target_idx_ != static_cast<size_t>(-1) &&
+					sim.is_alive<pigeon_tag>(target_idx_))
 				{
 					const auto& target = sim.pop<pigeon_tag>()[target_idx_];
 					auto ofss = torus::ofs(Simulation::WH(), self->pos, target.pos);
 					const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
 					self->steering += Fdir;
 					self->speed = prey_speed_scale_ * target.speed;
+
+					//confusability
+					int new_target = static_cast<int>(target_idx_);
+					if (self->previous_target_i != -1 && self->previous_target_i != new_target){
+						++self->target_switch_count;
+					}
+					self->previous_target_i = new_target;
+					self->target_i = new_target;
 				}
 			}
 
@@ -301,30 +358,8 @@ namespace model {
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
-				const auto& prey_pop = sim.pop<pigeon_tag>();
-				float max_dist_to_centroid = -1.0f;
-				size_t most_peripheral_idx = static_cast<size_t>(-1);
-
-				for (size_t i = 0; i < prey_pop.size(); ++i)
-				{
-					if (!sim.is_alive<pigeon_tag>(i)) continue;
-
-					// ONLY consider prey from the targeted flock
-					if (sim.flock_of<pigeon_tag>(i) != self->target_f) continue;
-
-					glm::vec2 centroid = sim.compute_flock_centroid<pigeon_tag>(self->target_f);
-
-					float dist = glm::length(torus::ofs(Simulation::WH(), prey_pop[i].pos, centroid));
-
-					if (dist > max_dist_to_centroid)
-					{
-						max_dist_to_centroid = dist;
-						most_peripheral_idx = i;
-					}
-				}
-
-				target_idx_ = most_peripheral_idx;
-				self->target_i = static_cast<int>(target_idx_);
+				self->previous_target_i = -1;
+				self->target_switch_count = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -333,6 +368,34 @@ namespace model {
 
 			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
+				const auto& prey_pop = sim.pop<pigeon_tag>();
+				glm::vec2 centroid = sim.compute_flock_centroid<pigeon_tag>(self->target_f);
+
+				glm::vec2 pred_pos_wrapped = torus::wrap(Simulation::WH(), self->pos);
+				auto vis = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped,self->dir);
+
+				float max_dist_to_centroid = -1.0f;
+				size_t most_peripheral_idx = static_cast<size_t>(-1);
+
+				for (size_t vi = 0; vi < vis.size(); ++vi)
+				{
+					size_t prey_idx = vis[vi].idx;
+
+					if (sim.flock_of<pigeon_tag>(prey_idx) != self->target_f)
+						continue;
+
+					glm::vec2 from_cent = torus::ofs(Simulation::WH(), centroid, prey_pop[prey_idx].pos);
+					float dist_to_cent = glm::length(from_cent);
+
+					if (dist_to_cent > max_dist_to_centroid)
+					{
+						max_dist_to_centroid = dist_to_cent;
+						most_peripheral_idx = prey_idx;
+					}
+				}
+
+				target_idx_ = most_peripheral_idx;
+
 				if (target_idx_ != static_cast<size_t>(-1) && sim.is_alive<pigeon_tag>(target_idx_))
 				{
 					const auto& target = sim.pop<pigeon_tag>()[target_idx_];
@@ -340,6 +403,14 @@ namespace model {
 					const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
 					self->steering += Fdir;
 					self->speed = prey_speed_scale_ * target.speed;
+
+					//confusability
+					int new_target = static_cast<int>(target_idx_);
+					if (self->previous_target_i != -1 && self->previous_target_i != new_target){
+						++self->target_switch_count;
+					}
+					self->previous_target_i = new_target;
+					self->target_i = new_target;
 				}
 			}
 
@@ -365,24 +436,23 @@ namespace model {
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
-				const auto& prey_pop = sim.pop<pigeon_tag>();
+				glm::vec2 pred_pos_wrapped = torus::wrap(Simulation::WH(), self->pos);
+				auto vis = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped, self->dir);
+
 				std::vector<size_t> valid_prey_indices;
+				valid_prey_indices.reserve(vis.size());
 
-				for (size_t i = 0; i < prey_pop.size(); ++i)
-				{
-					if (!sim.is_alive<pigeon_tag>(i)) continue;
-
-					// ONLY consider prey from the targeted flock
-					if (sim.flock_of<pigeon_tag>(i) != self->target_f) continue;
-
-					valid_prey_indices.push_back(i);
+				for (size_t i = 0; i < vis.size(); ++i) {
+					size_t prey_idx = vis[i].idx;
+					if (sim.flock_of<pigeon_tag>(prey_idx) != self->target_f)
+						continue;
+					valid_prey_indices.push_back(prey_idx);
 				}
 
-				if (!valid_prey_indices.empty())
-				{
+				if (!valid_prey_indices.empty()) {
 					std::uniform_int_distribution<size_t> dist(0, valid_prey_indices.size() - 1);
-					const size_t rand_idx = valid_prey_indices[dist(thread_local_rng())];
-					target_idx_ = rand_idx;
+					size_t choice = valid_prey_indices[dist(thread_local_rng())];
+					target_idx_ = choice;
 					self->target_i = static_cast<int>(target_idx_);
 				}
 			}
@@ -426,21 +496,22 @@ namespace model {
 			}
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim) {
+				self->previous_target_i = -1;
+				self->target_switch_count = 0;
 				stooping_ = false;
 				target_idx_ = static_cast<size_t>(-1);
 			}
 
-			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
-			{
-			}
+			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t) {}
 
 			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim) {
-				if (!stooping_) {
-					try_initiate_stoop(self, sim);
-				}
-				else {
+				// Always re-check occlusion and relock target
+				update_target_and_occlusion(self, sim, idx);
+
+				if (!stooping_) 
+					return;
+				else
 					execute_stoop(self, sim);
-				}
 			}
 
 		private:
@@ -455,38 +526,69 @@ namespace model {
 			size_t target_idx_ = static_cast<size_t>(-1);
 			vec_t locked_dir_;
 
-			void try_initiate_stoop(agent_type* self, const Simulation& sim) {
+			void update_target_and_occlusion(agent_type* self, const Simulation& sim, size_t idx) {
 				const vec_t predator_pos = self->pos;
 				const vec_t flock_centroid = sim.compute_flock_centroid<pigeon_tag>(self->target_f);
 				float dist = glm::length(torus::ofs(Simulation::WH(), predator_pos, flock_centroid));
 
-				if (dist > stoop_distance_threshold_) return;
+				if (dist > stoop_distance_threshold_) {
+					stooping_ = false;
+					target_idx_ = static_cast<size_t>(-1);
+					return;
+				}
+
+				vec_t pred_pos_wrapped = torus::wrap(Simulation::WH(), predator_pos);
+				auto visible_list = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped, self->dir);
+
+				std::vector<size_t> candidates;
+				candidates.reserve(visible_list.size());
+				for (const auto& v : visible_list) {
+					if (sim.flock_of<pigeon_tag>(v.idx) == self->target_f) {
+						candidates.push_back(v.idx);
+					}
+				}
+				if (candidates.empty()) {
+					stooping_ = false;
+					target_idx_ = static_cast<size_t>(-1);
+					return;
+				}
 
 				const auto& prey_pop = sim.pop<pigeon_tag>();
-				float max_isolation = -1.0f;
+				float best_iso_score = -1.f;
+				size_t best_prey = static_cast<size_t>(-1);
 
-				for (size_t i = 0; i < prey_pop.size(); ++i) {
-					if (!sim.is_alive<pigeon_tag>(i)) continue;
-					if (sim.flock_of<pigeon_tag>(i) != self->target_f) continue;
-
-					auto neighbors = sim.sorted_view<pigeon_tag, pigeon_tag>(i);
-					float distance_sum = 0.0f;
-
-					for (size_t j = 0; j < std::min(num_neighbors_, neighbors.size()); ++j)
-						distance_sum += glm::length(torus::ofs(Simulation::WH(), prey_pop[i].pos, prey_pop[neighbors[j].idx].pos));
-
-					if (distance_sum > max_isolation) {
-						max_isolation = distance_sum;
-						target_idx_ = i;
+				for (size_t pidx : candidates) {
+					auto nb = sim.sorted_view<pigeon_tag, pigeon_tag>(pidx);
+					float dist_sum = 0.f;
+					for (size_t k = 0; k < std::min(num_neighbors_, nb.size()); ++k) {
+						if (!sim.is_alive<pigeon_tag>(nb[k].idx)) continue;
+						vec_t diff = torus::ofs(Simulation::WH(), prey_pop[pidx].pos, prey_pop[nb[k].idx].pos);
+						dist_sum += glm::length(diff);
+					}
+					if (dist_sum > best_iso_score) {
+						best_iso_score = dist_sum;
+						best_prey = pidx;
 					}
 				}
 
-				if (target_idx_ != static_cast<size_t>(-1)) {
-					const auto& target = prey_pop[target_idx_];
-					vec_t offset = torus::ofs(Simulation::WH(), self->pos, target.pos);
+				if (best_prey == static_cast<size_t>(-1)) {
+					stooping_ = false;
+					target_idx_ = static_cast<size_t>(-1);
+					return;
+				}
+
+				int new_target = static_cast<int>(best_prey);
+				if (self->previous_target_i != -1 && self->previous_target_i != new_target) {
+					++self->target_switch_count;
+				}
+				self->previous_target_i = new_target;
+				self->target_i = new_target;
+
+				if (!stooping_ || best_prey != target_idx_) {
+					target_idx_ = best_prey;
+					vec_t offset = torus::ofs(Simulation::WH(), self->pos, prey_pop[target_idx_].pos);
 					locked_dir_ = math::save_normalize(offset, vec_t(0.f));
 					stooping_ = true;
-					self->target_i = static_cast<int>(target_idx_);
 				}
 			}
 
@@ -498,18 +600,15 @@ namespace model {
 				}
 
 				const auto& target = sim.pop<pigeon_tag>()[target_idx_];
-
 				const vec_t to_target = torus::ofs(Simulation::WH(), self->pos, target.pos);
 				const float distance = glm::length(to_target);
 
 				const vec_t desired_dir = math::save_normalize(to_target, locked_dir_);
 				const float closeness = glm::clamp(1.0f - distance / stoop_distance_threshold_, 0.0f, 1.0f);
-
-				// Ensure some minimum steering remains
 				const float min_steering = 0.2f;
 				const float adaptive_steering = glm::mix(steering_factor_, min_steering, closeness);
-
 				const vec_t steering_dir = glm::mix(locked_dir_, desired_dir, adaptive_steering);
+
 				self->steering += steering_dir * w_;
 				self->speed = target.speed * stoop_speed_factor_;
 			}

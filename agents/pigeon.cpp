@@ -58,7 +58,7 @@ namespace model {
     }
     case 4: tex = float(current_state_) / AP::size; break;
     case 5: tex = float(sim->flock_of<Tag>(idx)) / sim->flocks<Tag>().size(); break;
-    case 6: tex = float(am_target);
+    case 6: tex = float(am_target); break;
     case 7: tex = sim->prey_visible(idx) ? 1.0f : 0.0f;
     };
     tex = std::clamp(tex, -1.f, 1.f);  // yes -1,+1, need '-1' in shader

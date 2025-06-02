@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <time.h>
 #include "model/flock.hpp"
+#include "agents/predator.hpp"
 #include "model/simulation.hpp"
 #include "model/observer.hpp"
 #include "math.hpp"

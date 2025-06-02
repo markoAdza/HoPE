@@ -15,6 +15,11 @@
       "data_folder": "pigeon_data_test",
       "Observers": [
         {
+          "type": "PredatorData",
+          "sample_freq": 0.2,
+          "output_name": "predator_data"
+        },
+        {
           "type": "TimeSeries",
           "sample_freq": 0.2,
           "output_name": "time_series"

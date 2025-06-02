@@ -127,7 +127,7 @@ namespace model {
 
         // FOV check
         float cosAngle = glm::dot(glm::normalize(F), glm::normalize(AB));
-        if (cosAngle < std::cos(fov * 0.5f))  // cheaper than acos
+        if (cosAngle < std::cos(fov * 0.5f))
           continue;
 
         // occlusion
@@ -150,7 +150,7 @@ namespace model {
         if (blocked) continue;
 
         neighbor_info info;
-        info.idx = (unsigned)i;
+        info.idx = static_cast<unsigned>(i);
         info.dist2 = dAB * dAB;
         info.bangl = 0.f;
         vis.push_back(info);

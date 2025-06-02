@@ -2,9 +2,59 @@
 #define ANALYSIS_OBS_HPP_INCLUDED
 
 #include <analysis/analysis.hpp>
-
 namespace analysis
 {
+	template<typename PredatorTag>
+	class PredatorObserver : public model::AnalysisObserver
+	{
+	public:
+		PredatorObserver(const std::filesystem::path& out_path, const json& J)
+			: AnalysisObserver(out_path, J)
+		{
+			analysis::open_csv(outfile_stream_, full_out_path_, header_);
+		}
+
+		~PredatorObserver() override {}
+
+		void notify_collect(const model::Simulation& sim) override
+		{
+			const float tt = static_cast<float>(sim.tick()) * model::Simulation::dt();
+
+			sim.visit_all<PredatorTag>([&](auto& p, size_t idx, bool alive) {
+				if (!alive) return;
+
+				data_out_.push_back({
+					static_cast<float>(p.target_switch_count),
+
+					p.steering.y,
+					p.steering.x,
+					p.accel.y,
+					p.accel.x,
+					p.speed,
+					p.ang_vel,
+					p.dir.y,
+					p.dir.x,
+					p.pos.y,
+					p.pos.x,
+
+					static_cast<float>(idx),
+					tt
+					});
+				});
+		}
+
+		void notify_save(const model::Simulation& sim) override
+		{
+			if (data_out_.empty()) return;
+			std::cout << "Saving predator data..." << std::endl;
+			analysis::export_data(data_out_, outfile_stream_);
+		}
+
+	private:
+		const std::string header_ =
+			"time,id,posx,posy,dirx,diry,ang_vel,speed,accelx,accely,steerx,steery,target_switch";
+	};
+
 	template <typename Tag>
 	class TimeSeriesObserver : public model::AnalysisObserver
 	{
@@ -326,6 +376,7 @@ namespace analysis
 			else if (type == "NeighbData") res.emplace_back(std::make_unique<AllNeighborsObserver<Tag>>(unique_path, j, N));
 			else if (type == "SnapShot") res.emplace_back(std::make_unique<SnapShotObserver<Tag>>(unique_path, j));
 			else if (type == "CoordForces") res.emplace_back(std::make_unique<ForcesObserver<Tag>>(unique_path, j));
+			else if (type == "PredatorData") res.emplace_back(std::make_unique<PredatorObserver<pred_tag>>(unique_path, j));
 			else throw std::runtime_error("unknown observer");
 		}
 		res.emplace_back(std::make_unique<DataExpObserver>(J)); // has to be at the end of the chain

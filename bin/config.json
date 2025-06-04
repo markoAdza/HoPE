@@ -38,6 +38,14 @@
           "type": "CoordForces",
           "sample_freq": 0.2,
           "output_name": "forces"
+        },
+        {
+          "type": "DiffusionData",
+          "sample_freq": 0.2,
+          "max_Qm_topo": 4,
+          "max_D_topo": 7,
+          "window": 3,
+          "output_name": "diffusion"
         }
       ],
       "Externals": {

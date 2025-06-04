@@ -20,6 +20,7 @@ namespace model {
   public:
     enum Msg {
       Tick = 0,
+      PreTick,
       Initialized,
       Finished,
       MaxMsg
@@ -32,15 +33,19 @@ namespace model {
     void set_snapshots(const species_snapshots& ss);
     species_snapshots get_snapshots() const;
 
+    // request forced neighbor info update every tick
+    void force_neighbor_info_update(bool required) const { force_ni_update_.fetch_add(required ? +1 : -1); }
+    bool forced_neighbor_info_update() const { return force_ni_update_.load(std::memory_order_acquire) > 0; }
+
     void update(class Observer* observer);
     
     static float WH() noexcept { return WH_; }
     static float dt() noexcept { return dt_; }      // [s]
 
     tick_t tick() const noexcept { return tick_; }  // [1]
-    tick_t time2tick(double time) const noexcept { return static_cast<tick_t>(time / dt_); }  // [1]
+    static tick_t time2tick(double time) noexcept { return static_cast<tick_t>(time / dt_); }  // [1]
     double time() const noexcept { return static_cast<double>(dt_) * tick_; }                 // [s]
-    double tick2time(tick_t tick) const noexcept { return static_cast<double>(dt_) * tick_; } // [s]
+    static double tick2time(tick_t tick) noexcept { return static_cast<double>(dt_) * tick; } // [s]
 
     // returns const reference to population vector that
     // contains both alive and non-alive individuals.
@@ -302,6 +307,8 @@ namespace model {
     tick_t flock_update_ = 0;
     tick_t flock_interval_ = 0;
     float flock_dd_ = 0.f;
+
+    mutable std::atomic<int> force_ni_update_ = 0; // forced neighbor info update every tick if > 0
     mutable std::recursive_mutex mutex_;      // simulation lock
     mutable species_pop species_;
     mutable std::atomic<bool> terminate_ = false;

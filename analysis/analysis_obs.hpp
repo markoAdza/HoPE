@@ -2,6 +2,8 @@
 #define ANALYSIS_OBS_HPP_INCLUDED
 
 #include <analysis/analysis.hpp>
+#include "analysis/diffusion_obs.hpp"
+
 namespace analysis
 {
 	template<typename PredatorTag>
@@ -377,6 +379,7 @@ namespace analysis
 			else if (type == "SnapShot") res.emplace_back(std::make_unique<SnapShotObserver<Tag>>(unique_path, j));
 			else if (type == "CoordForces") res.emplace_back(std::make_unique<ForcesObserver<Tag>>(unique_path, j));
 			else if (type == "PredatorData") res.emplace_back(std::make_unique<PredatorObserver<pred_tag>>(unique_path, j));
+			else if (type == "DiffusionData") res.emplace_back(std::make_unique<DiffusionObserver<Tag>>(unique_path, j));
 			else throw std::runtime_error("unknown observer");
 		}
 		res.emplace_back(std::make_unique<DataExpObserver>(J)); // has to be at the end of the chain

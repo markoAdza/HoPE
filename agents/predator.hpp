@@ -124,6 +124,8 @@ namespace model {
     int target_i; // individual target
     int previous_target_i = -1;
     int target_switch_count = 0;
+    int num_catches = 0;
+    float capture_radius = 5.0f;
     
     flight::aero_info<float> ai;
 	  flight::state_aero<float> sa;
@@ -132,6 +134,8 @@ namespace model {
     int current_state_ = 0;
     static transitions transitions_;
     AP::package_array pa_;
+
+    void update_target_caught(const Simulation& sim);
   };
 
 

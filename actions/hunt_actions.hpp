@@ -35,7 +35,8 @@ namespace model {
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
 				self->previous_target_i = -1;
-			  self->target_switch_count = 0;
+				self->target_switch_count = 0;
+				self->num_catches = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -91,6 +92,7 @@ namespace model {
 			{
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
+				self->num_catches = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -149,6 +151,7 @@ namespace model {
 			{
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
+				self->num_catches = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -169,7 +172,7 @@ namespace model {
 						auto ofss = torus::ofs(Simulation::WH(), self->pos, centroid_);
 						const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
 						self->steering += Fdir;
-						self->speed = prey_speed_scale_ * 10.0f;  // Adjust speed as needed
+						self->speed = prey_speed_scale_ * 10.0f;
 					}
 					else
 					{
@@ -268,6 +271,7 @@ namespace model {
 			{
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
+				self->num_catches = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -360,6 +364,7 @@ namespace model {
 			{
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
+				self->num_catches = 0;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -498,6 +503,7 @@ namespace model {
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim) {
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
+				self->num_catches = 0;
 				stooping_ = false;
 				target_idx_ = static_cast<size_t>(-1);
 			}

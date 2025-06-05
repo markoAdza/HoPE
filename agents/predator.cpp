@@ -58,6 +58,26 @@ namespace model {
     pa_[current_state_]->enter(this, idx, 0, sim);
   }
 
+  void Pred::update_target_caught(const Simulation& sim)
+  {
+    if (target_i != -1) {
+      if (sim.is_alive<pigeon_tag>(target_i)) {
+        const auto& prey = sim.pop<pigeon_tag>()[target_i];
+        float d2 = torus::distance2(Simulation::WH(), this->pos, prey.pos);
+        if (d2 < (capture_radius * capture_radius)) {
+          sim.set_alive<pigeon_tag>(target_i, false);
+          num_catches++;
+          previous_target_i = -1;
+          target_i = -1;
+        }
+      }
+      else {
+        previous_target_i = -1;
+        target_i = -1;
+      }
+    }
+  }
+
   ::model::instance_proxy Pred::instance_proxy(long long color_map, size_t idx, const Simulation* sim) const noexcept
   {
     float tex = -1.f;
@@ -88,6 +108,9 @@ namespace model {
     steering = vec_t(0);
     pa_[current_state_]->resume(this, idx, T, sim);
     last_update = T;
+
+    update_target_caught(sim);
+
     return T + reaction_time;
   }
 

@@ -232,7 +232,7 @@ namespace analysis {
         auto sv = sim.sorted_view<Tag>(i);
         const auto n = std::min(sv.size(), max_topo_);
         pivot.ninfo.assign(sv.cbegin(), sv.cbegin() + n);
-        std::fill(pivot.ninfo.begin() + n, pivot.ninfo.end(), model::neighbor_info{});
+        pivot.ninfo.resize(max_topo_);
       }
     }
 

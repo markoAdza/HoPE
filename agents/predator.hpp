@@ -126,6 +126,7 @@ namespace model {
     int target_switch_count = 0;
     int num_catches = 0;
     float capture_radius = 5.0f;
+    int last_caught_prey_id = -1;
     
     flight::aero_info<float> ai;
 	  flight::state_aero<float> sa;

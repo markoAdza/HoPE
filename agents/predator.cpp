@@ -67,6 +67,7 @@ namespace model {
         if (d2 < (capture_radius * capture_radius)) {
           sim.set_alive<pigeon_tag>(target_i, false);
           num_catches++;
+          last_caught_prey_id = target_i;
           previous_target_i = -1;
           target_i = -1;
         }

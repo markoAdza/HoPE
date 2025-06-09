@@ -37,6 +37,7 @@ namespace model {
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
 				self->num_catches = 0;
+				self->last_caught_prey_id = -1;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -93,6 +94,7 @@ namespace model {
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
 				self->num_catches = 0;
+				self->last_caught_prey_id = -1;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -152,6 +154,7 @@ namespace model {
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
 				self->num_catches = 0;
+				self->last_caught_prey_id = -1;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -272,6 +275,7 @@ namespace model {
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
 				self->num_catches = 0;
+				self->last_caught_prey_id = -1;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -365,6 +369,7 @@ namespace model {
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
 				self->num_catches = 0;
+				self->last_caught_prey_id = -1;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -504,6 +509,7 @@ namespace model {
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
 				self->num_catches = 0;
+				self->last_caught_prey_id = -1;
 				stooping_ = false;
 				target_idx_ = static_cast<size_t>(-1);
 			}

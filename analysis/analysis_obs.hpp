@@ -26,6 +26,7 @@ namespace analysis
 				if (!alive) return;
 
 				data_out_.push_back({
+					static_cast<float>(p.last_caught_prey_id),
 					static_cast<float>(p.num_catches),
 					static_cast<float>(p.target_switch_count),
 
@@ -55,7 +56,7 @@ namespace analysis
 
 	private:
 		const std::string header_ =
-			"time,id,posx,posy,dirx,diry,ang_vel,speed,accelx,accely,steerx,steery,target_switch,catches";
+			"time,id,posx,posy,dirx,diry,ang_vel,speed,accelx,accely,steerx,steery,target_switch,catches,last_catch_id";
 	};
 
 	template <typename Tag>

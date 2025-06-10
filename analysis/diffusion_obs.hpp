@@ -264,6 +264,8 @@ namespace analysis {
         }
         os << '\n';
       }
+
+      std::cout << "Saving Qm data.." << std::endl;
     }
 
     void save_R()
@@ -279,6 +281,8 @@ namespace analysis {
         }
         os << '\n';
       }
+
+      std::cout << "Saving R data.." << std::endl;
     }
 
     void save_D(const std::vector<std::vector<std::vector<float>>>& D, const std::string& prefix)
@@ -296,6 +300,8 @@ namespace analysis {
           os << '\n';
         }
       }
+
+      std::cout << "Saving D data.." << std::endl;
     }
 
     diffusion::window_t window_;

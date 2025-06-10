@@ -189,7 +189,7 @@ namespace analysis {
 
     void notify_collect(const model::Simulation& sim) override
     {
-      //assert(sim.forced_neighbor_info_update());
+      assert(sim.forced_neighbor_info_update());
       sim.force_neighbor_info_update(false);
       if (future_.valid()) future_.get();
       pull_data(sim);

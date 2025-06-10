@@ -287,6 +287,7 @@ namespace model {
 
   void Simulation::update(Observer* observer)
   {
+    notify_observer(observer, PreTick, this);
     {
       std::lock_guard<std::recursive_mutex> _(mutex_);
       update_species<0>(this, species_, state_);

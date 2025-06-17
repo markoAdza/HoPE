@@ -63,7 +63,11 @@ namespace model {
     if (target_i != -1) {
       if (sim.is_alive<pigeon_tag>(target_i)) {
         const auto& prey = sim.pop<pigeon_tag>()[target_i];
-        float d2 = torus::distance2(Simulation::WH(), this->pos, prey.pos);
+
+        const glm::vec2 pred_pos_wrapped = torus::wrap(Simulation::WH(), this->pos);
+        const glm::vec2 prey_pos_wrapped = torus::wrap(Simulation::WH(), prey.pos);
+
+        float d2 = torus::distance2(Simulation::WH(), pred_pos_wrapped, prey_pos_wrapped);
         if (d2 < (capture_radius * capture_radius)) {
           sim.set_alive<pigeon_tag>(target_i, false);
           num_catches++;

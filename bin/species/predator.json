@@ -26,7 +26,7 @@
         "description": "set from flock",
         "aeroState": {
           "cruiseSpeed": 18,
-          "w": 5
+          "w": 8
         },
         "actions": [
           {
@@ -37,24 +37,29 @@
             "name": "set_from_flock",
             "bearing": 180,
             "distance": 35,
-            "prey_speed_scale": 2.5
+            "prey_speed_scale": 1.7
           }
         ]
       },
       {
         "name": "persistent",
         "tr": 0.05,
-        "duration": 10,
+        "duration": 60,
         "description": "hunt",
         "aeroState": {
           "cruiseSpeed": 18,
-          "w": 5
+          "w": 8
         },
         "actions": [
           {
             "name": "chase_closest_prey",
-            "w": 2.0,
-            "prey_speed_scale": 2.1
+            "w": 8,
+            "prey_speed_scale": 2,
+            "centroid_threshold": 5,
+            "stoop_distance_threshold": 40.0,
+            "stoop_speed_factor": 10.0,
+            "steering_factor": 0.5,
+            "num_neighbors": 5
           }
         ]
       }

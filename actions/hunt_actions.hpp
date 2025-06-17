@@ -155,6 +155,7 @@ namespace model {
 				self->target_switch_count = 0;
 				self->num_catches = 0;
 				self->last_caught_prey_id = -1;
+				target_idx_ = static_cast<size_t>(-1);
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -541,7 +542,7 @@ namespace model {
 			void update_target_and_occlusion(agent_type* self, const Simulation& sim, size_t idx) {
 				const vec_t predator_pos = self->pos;
 				const vec_t flock_centroid = sim.compute_flock_centroid<pigeon_tag>(self->target_f);
-				float dist = glm::length(torus::ofs(Simulation::WH(), predator_pos, flock_centroid));
+				const float dist = glm::length(torus::ofs(Simulation::WH(), predator_pos, flock_centroid));
 
 				if (dist > stoop_distance_threshold_) {
 					stooping_ = false;
@@ -598,7 +599,7 @@ namespace model {
 
 				if (!stooping_ || best_prey != target_idx_) {
 					target_idx_ = best_prey;
-					vec_t offset = torus::ofs(Simulation::WH(), self->pos, prey_pop[target_idx_].pos);
+					const vec_t offset = torus::ofs(Simulation::WH(), self->pos, prey_pop[target_idx_].pos);
 					locked_dir_ = math::save_normalize(offset, vec_t(0.f));
 					stooping_ = true;
 				}
@@ -617,7 +618,7 @@ namespace model {
 
 				const vec_t desired_dir = math::save_normalize(to_target, locked_dir_);
 				const float closeness = glm::clamp(1.0f - distance / stoop_distance_threshold_, 0.0f, 1.0f);
-				const float min_steering = 0.2f;
+				constexpr float min_steering = 0.2f;
 				const float adaptive_steering = glm::mix(steering_factor_, min_steering, closeness);
 				const vec_t steering_dir = glm::mix(locked_dir_, desired_dir, adaptive_steering);
 

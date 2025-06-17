@@ -70,6 +70,9 @@ namespace model {
 
 			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
+				if (self->target_f == -1)
+					return;
+
 				const auto& target = sim.pop<pigeon_tag>()[self->target_f];
 				self->pos = target.pos + dist_ * math::rotate(target.dir, bearing_);
 				self->dir = target.dir;

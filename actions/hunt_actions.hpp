@@ -493,10 +493,8 @@ namespace model {
 		template <typename Agent>
 		class stooping_hunt {
 			make_action_from_this(stooping_hunt);
-
 		public:
 			stooping_hunt() {}
-
 			stooping_hunt(size_t, const json& J) {
 				w_ = J["w"];
 				prey_speed_scale_ = J["prey_speed_scale"];
@@ -505,126 +503,71 @@ namespace model {
 				steering_factor_ = J["steering_factor"];
 				num_neighbors_ = J["num_neighbors"];
 			}
-
-			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim) {
+			void on_entry(agent_type* self, size_t, tick_t, const Simulation&) {
 				self->previous_target_i = -1;
 				self->target_switch_count = 0;
 				self->num_catches = 0;
 				self->last_caught_prey_id = -1;
-				stooping_ = false;
-				target_idx_ = static_cast<size_t>(-1);
+				target_idx_ = size_t(-1);
 			}
 
-			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t) {}
-
-			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim) {
-				// Always re-check occlusion and relock target
-				update_target_and_occlusion(self, sim, idx);
-
-				if (!stooping_) 
-					return;
-				else
-					execute_stoop(self, sim);
+			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
+			{
 			}
 
-		private:
-			float w_ = 0;
-			float prey_speed_scale_ = 1.0f;
-			float stoop_distance_threshold_ = 50.0f;
-			float stoop_speed_factor_ = 2.0f;
-			float steering_factor_ = 0.05f;
-			size_t num_neighbors_ = 5;
-
-			bool stooping_ = false;
-			size_t target_idx_ = static_cast<size_t>(-1);
-			vec_t locked_dir_;
-
-			void update_target_and_occlusion(agent_type* self, const Simulation& sim, size_t idx) {
-				const vec_t predator_pos = self->pos;
-				const vec_t flock_centroid = sim.compute_flock_centroid<pigeon_tag>(self->target_f);
-				const float dist = glm::length(torus::ofs(Simulation::WH(), predator_pos, flock_centroid));
-
-				if (dist > stoop_distance_threshold_) {
-					stooping_ = false;
-					target_idx_ = static_cast<size_t>(-1);
-					return;
-				}
-
-				vec_t pred_pos_wrapped = torus::wrap(Simulation::WH(), predator_pos);
-				auto visible_list = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped, self->dir);
-
+			void operator()(agent_type* self, size_t idx, tick_t, const Simulation& sim) {
+				// Find most isolated prey among visible neighbors
+				glm::vec2 wrapped = torus::wrap(Simulation::WH(), self->pos);
+				auto vis = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, wrapped, self->dir);
 				std::vector<size_t> candidates;
-				candidates.reserve(visible_list.size());
-				for (const auto& v : visible_list) {
-					if (sim.flock_of<pigeon_tag>(v.idx) == self->target_f) {
+				for (auto& v : vis) {
+					if (sim.flock_of<pigeon_tag>(v.idx) == self->target_f)
 						candidates.push_back(v.idx);
-					}
 				}
-				if (candidates.empty()) {
-					stooping_ = false;
-					target_idx_ = static_cast<size_t>(-1);
-					return;
-				}
-
-				const auto& prey_pop = sim.pop<pigeon_tag>();
-				float best_iso_score = -1.f;
-				size_t best_prey = static_cast<size_t>(-1);
-
-				for (size_t pidx : candidates) {
-					auto nb = sim.sorted_view<pigeon_tag, pigeon_tag>(pidx);
-					float dist_sum = 0.f;
+				float best_iso = -1.0f;
+				size_t isolate_idx = size_t(-1);
+				const auto& pop = sim.pop<pigeon_tag>();
+				for (auto pi : candidates) {
+					auto nb = sim.sorted_view<pigeon_tag, pigeon_tag>(pi);
+					float sumd = 0.0f;
 					for (size_t k = 0; k < std::min(num_neighbors_, nb.size()); ++k) {
 						if (!sim.is_alive<pigeon_tag>(nb[k].idx)) continue;
-						vec_t diff = torus::ofs(Simulation::WH(), prey_pop[pidx].pos, prey_pop[nb[k].idx].pos);
-						dist_sum += glm::length(diff);
+						auto d = glm::length(torus::ofs(Simulation::WH(), pop[pi].pos, pop[nb[k].idx].pos));
+						sumd += d;
 					}
-					if (dist_sum > best_iso_score) {
-						best_iso_score = dist_sum;
-						best_prey = pidx;
-					}
+					if (sumd > best_iso) { best_iso = sumd; isolate_idx = pi; }
 				}
-
-				if (best_prey == static_cast<size_t>(-1)) {
-					stooping_ = false;
-					target_idx_ = static_cast<size_t>(-1);
+				if (isolate_idx == size_t(-1) || !sim.is_alive<pigeon_tag>(isolate_idx)) {
+					// no valid target
 					return;
 				}
 
-				int new_target = static_cast<int>(best_prey);
-				if (self->previous_target_i != -1 && self->previous_target_i != new_target) {
+				// Compute offset to target
+				const auto& prey = pop[isolate_idx];
+				auto ofs = torus::ofs(Simulation::WH(), self->pos, prey.pos);
+				auto dir = math::save_normalize(ofs, vec_t(0.0f));
+				float dist = glm::length(ofs);
+
+				constexpr size_t max_steer_dist_ = 20;
+				float ramp = glm::clamp((max_steer_dist_ - dist) / max_steer_dist_, 0.0f, 1.0f);
+				float gain = steering_factor_ * (1.0f + ramp);
+				self->steering = dir * gain;
+				self->speed = stoop_speed_factor_ * prey.speed;
+				
+				// track switches
+				int new_i = int(isolate_idx);
+				if (self->previous_target_i != -1 && self->previous_target_i != new_i)
 					++self->target_switch_count;
-				}
-				self->previous_target_i = new_target;
-				self->target_i = new_target;
-
-				if (!stooping_ || best_prey != target_idx_) {
-					target_idx_ = best_prey;
-					const vec_t offset = torus::ofs(Simulation::WH(), self->pos, prey_pop[target_idx_].pos);
-					locked_dir_ = math::save_normalize(offset, vec_t(0.f));
-					stooping_ = true;
-				}
+				self->previous_target_i = new_i;
+				self->target_i = new_i;
 			}
-
-			void execute_stoop(agent_type* self, const Simulation& sim) {
-				if (!sim.is_alive<pigeon_tag>(target_idx_)) {
-					stooping_ = false;
-					target_idx_ = static_cast<size_t>(-1);
-					return;
-				}
-
-				const auto& target = sim.pop<pigeon_tag>()[target_idx_];
-				const vec_t to_target = torus::ofs(Simulation::WH(), self->pos, target.pos);
-				const float distance = glm::length(to_target);
-
-				const vec_t desired_dir = math::save_normalize(to_target, locked_dir_);
-				const float closeness = glm::clamp(1.0f - distance / stoop_distance_threshold_, 0.0f, 1.0f);
-				constexpr float min_steering = 0.2f;
-				const float adaptive_steering = glm::mix(steering_factor_, min_steering, closeness);
-				const vec_t steering_dir = glm::mix(locked_dir_, desired_dir, adaptive_steering);
-
-				self->steering += steering_dir * w_;
-				self->speed = target.speed * stoop_speed_factor_;
-			}
+		private:
+			float w_ = 0, prey_speed_scale_ = 1.0f;
+			float stoop_distance_threshold_ = 0;
+			float stoop_speed_factor_ = 1.0f;
+			float steering_factor_ = 0.1f;
+			size_t num_neighbors_ = 5;
+			size_t target_idx_;
 		};
 
 	}

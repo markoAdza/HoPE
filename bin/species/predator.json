@@ -36,30 +36,78 @@
           {
             "name": "set_from_flock",
             "bearing": 180,
-            "distance": 35,
+            "distance": 100,
             "prey_speed_scale": 1.7
           }
         ]
       },
       {
         "name": "persistent",
+        "duration": 20,
         "tr": 0.05,
-        "duration": 60,
-        "description": "hunt",
+        "description": "shadow_far",
+        "aeroState": {
+          "cruiseSpeed": 18,
+          "w": 5
+        },
+        "actions": [
+          {
+            "name": "select_flock",
+            "selection": "biggest"
+          },
+          {
+            "name": "shadowing",
+            "bearing": 180,
+            "distance": 80,
+            "w": 5,
+            "prey_speed_scale": 1,
+            "placement": 0
+          }
+        ]
+      },
+      {
+        "name": "persistent",
+        "duration": 20,
+        "tr": 0.05,
+        "description": "shadow_close",
+        "aeroState": {
+          "cruiseSpeed": 18,
+          "w": 5
+        },
+        "actions": [
+          {
+            "name": "select_flock",
+            "selection": "biggest"
+          },
+          {
+            "name": "shadowing",
+            "bearing": 180,
+            "distance": 35,
+            "w": 3,
+            "prey_speed_scale": 1,
+            "placement": 1
+          }
+        ]
+      },
+      {
+        "name": "persistent",
+        "tr": 0.05,
+        "duration": 9,
+        "description": "attack",
         "aeroState": {
           "cruiseSpeed": 18,
           "w": 8
         },
         "actions": [
           {
-            "name": "chase_closest_prey",
+            "name": "stooping_hunt",
+            "stoop_speed_factor": 6.5,
+            "steering_factor": 0.15,
+            "num_neighbors": 5,
             "w": 8,
-            "prey_speed_scale": 2,
-            "centroid_threshold": 5,
-            "stoop_distance_threshold": 40.0,
-            "stoop_speed_factor": 10.0,
-            "steering_factor": 0.5,
-            "num_neighbors": 5
+            "prey_speed_scale": 1.5,
+            "centroid_threshold": 10,
+            "stoop_distance_threshold": 40.0
           }
         ]
       }
@@ -68,8 +116,10 @@
       "name": "piecewise_linear_interpolator",
       "TM": [
         [
-          [ 0, 1 ],
-          [ 1, 0 ]
+          [ 0, 0, 1, 0 ],
+          [ 0, 0, 1, 0 ],
+          [ 0, 0, 0, 1 ],
+          [ 0, 1, 0, 0 ]
         ]
       ],
       "edges": [ 0 ]

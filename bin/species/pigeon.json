@@ -73,8 +73,8 @@
             "w": 0.2
           },
           {
-            "name": "avoid_p_position_and_direction",
-            "minsep": 30.0,
+            "name": "avoid_p_direction",
+            "minsep": 35.0,
             "w": 2,
             "w_pos": 2,
             "w_dir": 3

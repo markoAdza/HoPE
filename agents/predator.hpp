@@ -80,7 +80,15 @@ namespace model {
       actions::set_from_flock<Pred>
       >>,
       states::persistent<actions::package<Pred,
-      actions::chase_closest_prey<Pred>
+      actions::select_flock<Pred>,
+      actions::shadowing<Pred>
+      >>,
+      states::persistent<actions::package<Pred,
+      actions::select_flock<Pred>,
+      actions::shadowing<Pred>
+      >>,
+      states::persistent<actions::package<Pred,
+      actions::stooping_hunt<Pred>
       >>
       > ;
     using transitions = transitions::piecewise_linear_interpolator<AP::transition_matrix, 1>;

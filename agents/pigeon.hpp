@@ -62,7 +62,7 @@ namespace model {
         actions::cohere_accel_n_front<Pigeon>,
         actions::avoid_n_position<Pigeon>,
         actions::wiggle<Pigeon>,
-        actions::avoid_p_position_and_direction<Pigeon>
+        actions::avoid_p_direction<Pigeon>
         >>
     >;
 

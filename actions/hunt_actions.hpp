@@ -176,7 +176,7 @@ namespace model {
 						auto ofss = torus::ofs(Simulation::WH(), self->pos, centroid_);
 						const auto Fdir = math::save_normalize(ofss, vec_t(0.f)) * w_;
 						self->steering += Fdir;
-						self->speed = prey_speed_scale_ * 10.0f;
+						self->speed = prey_speed_scale_ * 15.0f;
 					}
 					else
 					{
@@ -548,8 +548,8 @@ namespace model {
 				auto dir = math::save_normalize(ofs, vec_t(0.0f));
 				float dist = glm::length(ofs);
 
-				constexpr size_t max_steer_dist_ = 20;
-				float ramp = glm::clamp((max_steer_dist_ - dist) / max_steer_dist_, 0.0f, 1.0f);
+				constexpr size_t max_steer_dist_ = 10;
+				const float ramp = glm::clamp((max_steer_dist_ - dist) / max_steer_dist_, 0.0f, 1.0f);
 				float gain = steering_factor_ * (1.0f + ramp);
 				self->steering = dir * gain;
 				self->speed = stoop_speed_factor_ * prey.speed;

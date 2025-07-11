@@ -178,8 +178,8 @@ namespace analysis {
       max_Qm_topo_ = std::min(sim.pop<Tag>().size(), max_Qm_topo_);
       max_D_topo_ = std::min(sim.pop<Tag>().size(), max_D_topo_);
       max_topo_ = std::max(max_D_topo_, max_Qm_topo_);
-      Dfor_.resize(max_D_topo_);
-      Dequ_.resize(max_D_topo_);
+      //Dfor_.resize(max_D_topo_);
+      //Dequ_.resize(max_D_topo_);
     }
 
     void notify_pre_collect(const model::Simulation& sim) override
@@ -203,12 +203,12 @@ namespace analysis {
      if (future_.valid()) future_.get();
       auto fqm = std::async(std::launch::async, &DiffusionObserver::save_Qm, this);
       auto fd = std::async(std::launch::async, &DiffusionObserver::save_R, this);
-      auto fde = std::async(std::launch::async, &DiffusionObserver::save_D, this, Dfor_, "Dfor_");
-      auto fdp = std::async(std::launch::async, &DiffusionObserver::save_D, this, Dequ_, "Dequ_");
+      //auto fde = std::async(std::launch::async, &DiffusionObserver::save_D, this, Dfor_, "Dfor_");
+      //auto fdp = std::async(std::launch::async, &DiffusionObserver::save_D, this, Dequ_, "Dequ_");
       fqm.get();
       fd.get();
-      fde.get();
-      fdp.get();
+      //fde.get();
+      //fdp.get();
     }
 
     void pull_data(const model::Simulation& sim)
@@ -238,17 +238,17 @@ namespace analysis {
 
     void analyse(model::tick_t tick)
     {
-      if (Dfor_.empty()) {
+      /*if (Dfor_.empty()) {
         Dfor_.resize(max_D_topo_);
         Dequ_.resize(max_D_topo_);
-      }
+      }*/
 
       Qmt_.emplace_back(diffusion::Qm(window_, max_Qm_topo_));
       R_.emplace_back(diffusion::R(window_));
-      tbb::parallel_for(0ull, max_D_topo_, [&](size_t i) {
+      /*tbb::parallel_for(0ull, max_D_topo_, [&](size_t i) {
         Dfor_[i].emplace_back(diffusion::Dfor(window_, i));
         Dequ_[i].emplace_back(diffusion::Dequ(window_, i));
-        });
+        });*/
     }
 
     void save_Qm()
@@ -313,8 +313,8 @@ namespace analysis {
     std::future<void> future_;
     std::vector<std::vector<float>> Qmt_;                 // timeseries of Qm(t)
     std::vector<std::vector<float>> R_;                   // timeseries of R(t)
-    std::vector<std::vector<std::vector<float>>> Dfor_;   // [0..max_Dev_topo] timeseries of Dfor(t)
-    std::vector<std::vector<std::vector<float>>> Dequ_;   // [0..max_Dev_topo] timeseries of Dfor(t)
+    //std::vector<std::vector<std::vector<float>>> Dfor_;   // [0..max_Dev_topo] timeseries of Dfor(t)
+    //std::vector<std::vector<std::vector<float>>> Dequ_;   // [0..max_Dev_topo] timeseries of Dfor(t)
   };
 
 }

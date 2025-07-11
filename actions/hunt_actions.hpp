@@ -447,6 +447,14 @@ namespace model {
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
+			}
+
+			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
+			{
+			}
+
+			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
+			{
 				glm::vec2 pred_pos_wrapped = torus::wrap(Simulation::WH(), self->pos);
 				auto vis = sim.sorted_view_with_occlusion<pred_tag, pigeon_tag>(idx, pred_pos_wrapped, self->dir);
 
@@ -466,14 +474,7 @@ namespace model {
 					target_idx_ = choice;
 					self->target_i = static_cast<int>(target_idx_);
 				}
-			}
 
-			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
-			{
-			}
-
-			void operator()(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
-			{
 				if (target_idx_ != static_cast<size_t>(-1) && sim.is_alive<pigeon_tag>(target_idx_))
 				{
 					const auto& target = sim.pop<pigeon_tag>()[target_idx_];

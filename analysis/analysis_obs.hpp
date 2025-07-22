@@ -377,12 +377,12 @@ namespace analysis
 			std::string type = j["type"];
 			if (type == "TimeSeries") res.emplace_back(std::make_unique<TimeSeriesObserver<Tag>>(unique_path, j));
 			else if (type == "FlockData") res.emplace_back(std::make_unique<FlockObserver<Tag>>(unique_path, j));
-			else if (type == "NeighbData") res.emplace_back(std::make_unique<AllNeighborsObserver<Tag>>(unique_path, j, N));
+			//else if (type == "NeighbData") res.emplace_back(std::make_unique<AllNeighborsObserver<Tag>>(unique_path, j, N));
 			else if (type == "SnapShot") res.emplace_back(std::make_unique<SnapShotObserver<Tag>>(unique_path, j));
 			else if (type == "CoordForces") res.emplace_back(std::make_unique<ForcesObserver<Tag>>(unique_path, j));
 			else if (type == "PredatorData") res.emplace_back(std::make_unique<PredatorObserver<pred_tag>>(unique_path, j));
 			else if (type == "DiffusionData") res.emplace_back(std::make_unique<DiffusionObserver<Tag>>(unique_path, j));
-			else throw std::runtime_error("unknown observer");
+			//else throw std::runtime_error("unknown observer");
 		}
 		res.emplace_back(std::make_unique<DataExpObserver>(J)); // has to be at the end of the chain
 		return res;

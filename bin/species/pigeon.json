@@ -17,7 +17,7 @@
       "minSpeed": 5,
       "cruiseSpeedSd": 2,
       "bodyMass": 0.45,
-      "bodyMassSd": 0.0,
+      "bodyMassSd": 0.05,
       "wingSpan": 0.7,
       "wingArea": 0.07
     },

@@ -5,6 +5,7 @@
 #include <glmutils/ray.hpp>
 #include <glmutils/random.hpp>
 #include "model/while_topo.hpp"
+#include <random>
 
 namespace model {
   namespace actions {
@@ -31,7 +32,10 @@ namespace model {
         float maxdist = J["maxdist"];     // [m]
         maxdist2 = maxdist * maxdist;     // [m^2]
 
-        w_ = J["w"];                       // [1]
+        //w_ = J["w"];                       // [1]
+        static thread_local std::mt19937 rng(std::random_device{}());
+        std::uniform_real_distribution<float> dist(4.5f, 5.5f);
+        w_ = dist(rng);
       }
 
       void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)

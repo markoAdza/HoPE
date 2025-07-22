@@ -3,6 +3,7 @@
 
 #include "model/while_topo.hpp"
 #include "model/action_base.hpp"
+#include <random>
 
 
 namespace model {
@@ -26,7 +27,11 @@ namespace model {
         // max distance
         float maxdist = J["maxdist"];    // [m]
         maxdist2 = maxdist * maxdist;    // [m^2]
-        w_ = J["w"];                     // [1]
+
+        //w_ = J["w"];                     // [1]
+        static thread_local std::mt19937 rng(std::random_device{}());
+        std::uniform_real_distribution<float> dist(7.0f, 8.0f);
+        w_ = dist(rng);
       }
 
       void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)

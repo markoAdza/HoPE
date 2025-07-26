@@ -59,7 +59,7 @@ namespace model {
 					self->speed = prey_speed_scale_ * target.speed;
 
 					int new_target = static_cast<int>(sv[0].idx);
-					if (self->previous_target_i != -1 && self->previous_target_i != new_target) {
+					if (self->previous_target_i != new_target) {
 						++self->target_switch_count;
 					}
 
@@ -121,7 +121,7 @@ namespace model {
 
 					// confusability
 					int new_target = static_cast<int>(target_idx_);
-					if (self->previous_target_i != -1 && self->previous_target_i != new_target) {
+					if (self->previous_target_i != new_target) {
 						++self->target_switch_count;
 					}
 					self->previous_target_i = new_target;
@@ -189,7 +189,7 @@ namespace model {
 
 							//confusability
 							int new_target = static_cast<int>(sv[0].idx);
-							if (self->previous_target_i != -1 && self->previous_target_i != new_target) {
+							if (self->previous_target_i != new_target) {
 								++self->target_switch_count;
 							}
 
@@ -336,7 +336,7 @@ namespace model {
 
 					//confusability
 					int new_target = static_cast<int>(target_idx_);
-					if (self->previous_target_i != -1 && self->previous_target_i != new_target){
+					if (self->previous_target_i != new_target){
 						++self->target_switch_count;
 					}
 					self->previous_target_i = new_target;
@@ -417,7 +417,7 @@ namespace model {
 
 					//confusability
 					int new_target = static_cast<int>(target_idx_);
-					if (self->previous_target_i != -1 && self->previous_target_i != new_target){
+					if (self->previous_target_i != new_target){
 						++self->target_switch_count;
 					}
 					self->previous_target_i = new_target;
@@ -447,6 +447,10 @@ namespace model {
 
 			void on_entry(agent_type* self, size_t idx, tick_t T, const Simulation& sim)
 			{
+				self->previous_target_i = -1;
+				self->target_switch_count = 0;
+				self->num_catches = 0;
+				self->last_caught_prey_id = -1;
 			}
 
 			void check_state_exit(const tick_t& state_dur, tick_t& state_exit_t)
@@ -472,6 +476,14 @@ namespace model {
 					std::uniform_int_distribution<size_t> dist(0, valid_prey_indices.size() - 1);
 					size_t choice = valid_prey_indices[dist(thread_local_rng())];
 					target_idx_ = choice;
+
+					//confusability
+					int new_target = static_cast<int>(target_idx_);
+					if (self->previous_target_i != new_target) {
+						++self->target_switch_count;
+					}
+
+					self->previous_target_i = new_target;
 					self->target_i = static_cast<int>(target_idx_);
 				}
 

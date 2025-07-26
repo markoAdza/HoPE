@@ -42,7 +42,7 @@
         {
           "type": "DiffusionData",
           "sample_freq": 0.2,
-          "max_Qm_topo": 4,
+          "max_Qm_topo": 6,
           "max_D_topo": 7,
           "window": 3,
           "output_name": "diffusion"
